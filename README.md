@@ -2,8 +2,45 @@
 
 A RESTful set of endpoints to query idioms and their definitions. The English language has a rich tradition of expressions. It can be challenging for native or newer English speakers to understand some idioms. This API is here to demystify some of them and easily find the right phrase when you need it.
 
+## Use Cases
+
+Here are some high-level use cases for this project. As a multi-container setup, these diagrams will explain how a user interacts with them.
+
+### API Requests
+
+This is the most common use case. A user who has successfully authenticated makes RESTful requests using the Idioms API. It provides a controlled interface to the database.
+
+```mermaid
+graph TD
+  user[fa:fa-user User]
+  client[Web Browser or Client]
+  api[Idioms API container]
+  database[(MongoDB container)]
+
+  user -->|Uses| client
+  client -->|Send HTTP request| api
+  api -->|queries| database
+  database -->|returns results| api
+  api -->|HTTP response| client
+```
+
+### Updating Database Contents
+
+The Idioms API only permits read requests to the database contents. In order to update the database, an admin user must use the `populate_db.py` utility. They can run this script once inside the Idioms API container with a Bash shell.
+
+```mermaid
+graph TD
+  admin[fa:fa-user Admin]
+  updater[populate_db.py]
+  database[(MongoDB Container)]
+
+  admin -->|Run script in container| updater
+  updater -->|Upsert idiom data| database
+```
+
 ## Dependencies
 
+* Linux operating system or Docker Desktop
 * Docker 29 or higher
 * Docker Compose v5.0.0 or higher
 
