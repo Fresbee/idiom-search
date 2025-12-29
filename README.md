@@ -53,6 +53,8 @@ MONGO_APP_USER=<username chosen for your database>
 MONGO_APP_PASSWORD=<password chosen for your database>
 MONGO_APP_DB=idioms_core
 MONGO_HOST_PORT=27017
+
+JWT_SECRET_KEY=jfoiewjfoiewnfiolewnfoliewneiofnewiofnoweinefio
 ```
 
 When you need to access a command line terminal for the MongoDB container, use the `mongosh` utility. Here is an example for how to connect to the database using the environment variables injected into the container by the .env file.
@@ -107,3 +109,53 @@ There is more work planned for this project. Here are some ideas for where to st
 * Add OAuth 2.0 or JWT authentication mechanism
 * Enhance security measures
 * Add POST endpoints for analysis
+
+## Authentication Flow
+
+Here is a diagram that illustrates the authentication flow for logging in with an existing user and requesting a new refresh token:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Client
+    participant API
+    participant DB as Database
+
+    %% Step 1: User login
+    User->>Client: Enters email & password
+    Client->>API: POST /auth/login {email, password}
+    API->>DB: Find User by email
+    DB-->>API: Return User record
+    API->>API: Verify password
+    API->>DB: Insert RefreshToken(token, user_id, expires_at)
+    API-->>Client: Return {access_token, refresh_token}
+
+    %% Step 2: Access API with access token
+    Client->>API: GET /protected_endpoint
+    API->>API: Verify access_token (JWT)
+    API-->>Client: Return data
+
+    %% Step 3: Access token expires
+    Client->>API: GET /protected_endpoint with expired token
+    API-->>Client: 401 Unauthorized
+
+    %% Step 4: Refresh access token
+    Client->>API: POST /auth/refresh {refresh_token}
+    API->>DB: Find RefreshToken
+    DB-->>API: Return RefreshToken
+    API->>API: Check expiry
+    API->>DB: Delete old RefreshToken (rotation)
+    API->>DB: Insert new RefreshToken
+    API-->>Client: Return {new_access_token, new_refresh_token}
+
+    %% Step 5: Repeat access with new access token
+    Client->>API: GET /some_endpoint with new access_token
+    API->>API: Verify access_token
+    API-->>Client: Return data
+
+    %% Optional: Logout or revoke all refresh tokens
+    User->>Client: Clicks "Logout"
+    Client->>API: POST /auth/logout
+    API->>DB: Delete all refresh tokens for user
+    API-->>Client: Success
+```

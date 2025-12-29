@@ -1,5 +1,8 @@
 fastapi[standard] == 0.124.4
-pydantic == 2.12.5
-pydantic-settings == 2.12.5
+pydantic
+pydantic-settings
 beanie == 2.0.1
 pandas == 2.3.3
+python-jose[cryptography]
+passlib
+argon2-cffi

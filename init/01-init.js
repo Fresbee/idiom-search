@@ -18,6 +18,8 @@ db.createUser({
 });
 
 db.createCollection("idioms");
+db.createCollection("refresh_tokens");
+db.createCollection("users");
 
 // TODO: Seed initial data upon first run of the mongo service or load after DB is running (Python + Mongo module)
 // db.idioms.insertMany([

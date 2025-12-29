@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 
 from api.core.database import init_db, close_db
 from api.endpoints.analysis import router as analysis_router
+from api.endpoints.authentication import router as authentication_router
 from api.endpoints.idiom_search import router as idiom_search_router
 from api.models.idiom import Idiom as IdiomModel
 
@@ -21,11 +22,17 @@ api_description = "The English language has a rich tradition of expressions. " \
 "It can be challenging for native or newer English speakers to understand some idioms. " \
 "This API is here to demystify some of them and easily find the right phrase when you need it."
 
-app = FastAPI(title="The Idioms API",
-              summary="Discover colorful figures of speech and what they mean.",
-              description=api_description,
-              version="0.1.0",
-              lifespan=lifespan)
+app = FastAPI(
+    title="The Idioms API",
+    summary="Discover colorful figures of speech and what they mean.",
+    description=api_description,
+    version="0.1.0",
+    license_info={
+        "name": "MIT License",
+        "url": "https://opensource.org/license/mit/",
+    },
+    lifespan=lifespan,
+)
 
 @app.get("/healthcheck",
          summary="Healthcheck endpoint to verify API is running",
@@ -44,5 +51,6 @@ async def health_check() -> dict:
     return {"status": "ready", "db_connected": True, "db_sample_exists": bool(doc)}
 
 
+app.include_router(authentication_router)
 app.include_router(idiom_search_router)
 app.include_router(analysis_router)
