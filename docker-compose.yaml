@@ -1,6 +1,6 @@
 services:
-  app:
-    build: ./app
+  api:
+    build: ./api
     restart: unless-stopped
     depends_on:
       mongodb:
