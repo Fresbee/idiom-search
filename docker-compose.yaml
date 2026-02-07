@@ -1,4 +1,14 @@
 services:
+  web:
+    build: ./web
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - 3000:3000
+    environment:
+      - API_URL=http://127.0.0.1:8080
   api:
     build: ./api
     restart: unless-stopped
