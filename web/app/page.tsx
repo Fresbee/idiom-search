@@ -1,31 +1,57 @@
 import { searchIdioms } from "@/lib/api";
 import { IdiomList } from "@/components/IdiomList";
-import { cookies } from "next/headers";
+import { SearchBar } from "@/components/SearchBar";
 import { Idiom } from "@/lib/types";
+import { getAccessToken } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { logout } from "@/lib/auth";
 
 type HomeProps = {
-  searchParams?: { [key: string]: string | string[] | undefined };
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export default async function Home({ searchParams }: HomeProps) {
-  const q = typeof searchParams?.q === "string"
-    ? searchParams.q
-    : undefined;
+  // Check if the user has an authenticated session
+  const token = await getAccessToken();
+  if (!token) {
+    redirect("/login");
+  }
 
-
-  const cookieStore = await cookies();
-  const token = cookieStore.get("access_token")?.value;
+  const params = await searchParams;
+  const query = typeof params?.q === "string" ? params.q : undefined;
 
   let results: Idiom[] = [];
 
-  if (q && token) {
-    results = await searchIdioms(q, token);
+  console.log(`query = ${query}, token = ${token}`);
+  if (query && token) {
+    results = await searchIdioms(query, token);
+  } else {
+    if (!query) {
+      console.warn("Idiom search skipped: missing query.");
+    } else if (!token) {
+      console.error("Idiom search skipped: missing access_token cookie.");
+    }
   }
 
   return (
-    <main className="p-10">
+    <main className="p-10 relative">
+      <LogoutButton />
       <h1 className="text-3xl font-bold mb-4">Idiom Search</h1>
-      <IdiomList idioms={results} />
+      <SearchBar initialQuery={query} />
+      <IdiomList idioms={results} hasSearched={Boolean(query)} />
     </main>
+  );
+}
+
+export function LogoutButton() {
+  return (
+    <form action={logout} className="absolute top-10 right-10">
+      <button
+        type="submit"
+        className="bg-black text-white px-4 py-2 rounded"
+      >
+        Logout
+      </button>
+    </form>
   );
 }

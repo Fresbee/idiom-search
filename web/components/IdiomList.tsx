@@ -1,7 +1,15 @@
 import type { Idiom } from "@/lib/types";
 
-export function IdiomList({ idioms }: { idioms: Idiom[] }) {
+type IdiomListProps = {
+  idioms: Idiom[];
+  hasSearched?: boolean;
+};
+
+export function IdiomList({ idioms, hasSearched = false }: IdiomListProps) {
   if (!idioms.length) {
+    if (!hasSearched) {
+      return null;
+    }
     return <p className="text-gray-500">No results.</p>;
   }
 
