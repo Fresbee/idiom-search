@@ -61,7 +61,7 @@ async def get_idioms_starting_with_letter(starting_letter: str = Path(descriptio
                                           limit: int = Query(10, ge=1, le=100, description="Maximum number of items to return"),
                                           user: User = Depends(get_current_user)) -> list[IdiomSchema]:
     if len(starting_letter) > 1:
-        raise HTTPException(status_code=400, detail="Query must be a single letter")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Query must be a single letter")
     
     # Perform case-insensitive partial-text matching using a regex on the `idiom` field.
     # Escape the search phrase to avoid regex injection and limit results.

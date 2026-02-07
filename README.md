@@ -31,11 +31,32 @@ The Idioms API only permits read requests to the database contents. In order to 
 ```mermaid
 graph TD
   admin[fa:fa-user Admin]
-  updater[populate_db.py]
+  subgraph Idioms API Container
+    updater[populate_db.py]
+  end
   database[(MongoDB Container)]
 
-  admin -->|Run script in container| updater
+  admin -->|Run script inside container| updater
   updater -->|Upsert idiom data| database
+```
+
+### Website Interface to API (coming soon)
+
+A logical future use case would be to connect a web application GUI to this API. Such a web application would live in a separate Docker container from the API. A user would need to authenticate to ensure they can access the needed features. After this, they can make search requests using the Idioms API.
+
+```mermaid
+graph TD
+  user[fa:fa-user User]
+  webapp[Web Application]
+  api[Idioms API container]
+  database[(MongoDB container)]
+
+  user -->|Search query| webapp
+  webapp -->|Send API request| api
+  api -->|queries| database
+  database -->|returns results| api
+  api -->|API response| webapp
+  webapp -->|Display results| user
 ```
 
 ## Dependencies
@@ -106,9 +127,8 @@ FastAPI provides Swagger and Redoc out of the box. This provides automatically g
 
 There is more work planned for this project. Here are some ideas for where to steer future development.
 
-* Add OAuth 2.0 or JWT authentication mechanism
-* Enhance security measures
-* Add POST endpoints for analysis
+* Build a front-end web interface to access idiom data (separate container)
+* Add endpoints for to analyze text for idiom recommendations
 
 ## Authentication Flow
 

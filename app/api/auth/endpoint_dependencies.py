@@ -20,7 +20,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(b
     """
 
     if not credentials:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
     try:
         payload = jwt.decode(credentials.credentials,
