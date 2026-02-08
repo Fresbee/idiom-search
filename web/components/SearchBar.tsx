@@ -24,6 +24,10 @@ export function SearchBar({ initialQuery = "", initialLimit = 10 }: SearchBarPro
     router.push(`/?q=${encodeURIComponent(query)}&limit=${limit}`);
   }
 
+  function onRandom() {
+    router.push("/?random=1");
+  }
+
   return (
     <form onSubmit={onSubmit} className="w-full max-w-2xl mx-auto">
       <div className="flex gap-2">
@@ -38,6 +42,13 @@ export function SearchBar({ initialQuery = "", initialLimit = 10 }: SearchBarPro
           type="submit"
         >
           Search
+        </button>
+        <button
+          className="border border-black px-4 py-2 rounded"
+          type="button"
+          onClick={onRandom}
+        >
+          I'm feeling lucky
         </button>
       </div>
       <label className="flex items-center gap-2 text-sm text-gray-700 mt-3">
