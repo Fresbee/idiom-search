@@ -7,6 +7,7 @@ const PUBLIC_PATH_PREFIXES = [
   "/favicon.ico",
 ];
 
+// Checks if a URL contains a public path
 function isPublicPath(pathname: string): boolean {
   return PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
@@ -29,7 +30,7 @@ function decodeJwtExp(token: string): number | null {
   }
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   if (isPublicPath(pathname)) {
