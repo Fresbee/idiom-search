@@ -44,20 +44,22 @@ async def login(data: LoginRequest, response: Response) -> TokenResponse:
 
     tokens = await issue_tokens(user)
 
+    # TODO: Change the secure=False to True once HTTPS certificates are added
     response.set_cookie(
         key="refresh_token",
         value=tokens.refresh_token,
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         path="/auth/refresh"
     )
 
+    # TODO: Change the secure=False to True once HTTPS certificates are added
     response.set_cookie(
         key="access_token",
         value=tokens.access_token,
         httponly=True,
-        secure=True,
+        secure=False,
         samesite="lax",
         path="/"
     )
@@ -75,7 +77,7 @@ async def login(data: LoginRequest, response: Response) -> TokenResponse:
                  status.HTTP_401_UNAUTHORIZED: {"description": "User not found or disabled"},
                  status.HTTP_403_FORBIDDEN: {"description": "Refresh token expired, please log in again"}
              })
-async def refresh(request: Request) -> TokenResponse:
+async def refresh(request: Request, response: Response) -> TokenResponse:
     refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
         raise HTTPException(
@@ -99,7 +101,28 @@ async def refresh(request: Request) -> TokenResponse:
     if not user or not user.is_active:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "User not found or disabled")
 
-    return await issue_tokens(user)
+    tokens = await issue_tokens(user)
+
+    # Rotate cookies 🔁
+    response.set_cookie(
+        key="refresh_token",
+        value=tokens.refresh_token,
+        httponly=True,
+        secure=False,   # True in prod
+        samesite="lax",
+        path="/auth/refresh"
+    )
+
+    response.set_cookie(
+        key="access_token",
+        value=tokens.access_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
+        path="/"
+    )
+
+    return tokens
 
 
 async def issue_tokens(user: User) -> TokenResponse:
