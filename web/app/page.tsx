@@ -3,8 +3,7 @@ import { IdiomList } from "@/components/IdiomList";
 import { SearchBar } from "@/components/SearchBar";
 import { AppHeader } from "@/components/AppHeader";
 import { Idiom } from "@/lib/types";
-import { getOrRefreshAccessToken, refreshAccessToken } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { getAccessToken } from "@/lib/auth";
 import { logout } from "@/lib/auth";
 
 type HomeProps = {
@@ -13,10 +12,7 @@ type HomeProps = {
 
 export default async function Home({ searchParams }: HomeProps) {
   // Check if the user has an authenticated session
-  let token = await getOrRefreshAccessToken();
-  if (!token) {
-    redirect("/login");
-  }
+  const token = await getAccessToken();
 
   const params = await searchParams;
   const query = typeof params?.q === "string" ? params.q : undefined;
@@ -25,23 +21,12 @@ export default async function Home({ searchParams }: HomeProps) {
 
   let results: Idiom[] = [];
 
-  console.log(`query = ${query}, token = ${token}`);
   if (query && token) {
     try {
       results = await searchIdioms(query, token, limit);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        const refreshedToken = await refreshAccessToken();
-        if (!refreshedToken) {
-          redirect("/login");
-        }
-        token = refreshedToken;
-        try {
-          results = await searchIdioms(query, token, limit);
-        } catch (retryError) {
-          console.error("Idiom search failed after refresh:", retryError);
-          results = [];
-        }
+        results = [];
       } else {
         console.error("Idiom search failed:", error);
         results = [];
@@ -51,7 +36,7 @@ export default async function Home({ searchParams }: HomeProps) {
     if (!query) {
       console.warn("Idiom search skipped: missing query.");
     } else if (!token) {
-      console.error("Idiom search skipped: missing access_token cookie.");
+      console.warn("Idiom search skipped: missing access_token cookie.");
     }
   }
 

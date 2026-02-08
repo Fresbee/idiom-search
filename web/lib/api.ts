@@ -53,13 +53,31 @@ export async function refreshTokens(
     headers: {
       Cookie: `refresh_token=${encodeURIComponent(refreshToken)}`,
     },
+    cache: "no-store",
   });
 
   if (!res.ok) {
     throw new ApiError(res.status, "Refresh failed");
   }
 
-  return res.json();
+  const text = await res.text();
+  if (!text) {
+    throw new ApiError(502, "Refresh returned empty body");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new ApiError(502, "Refresh returned invalid JSON");
+  }
+
+  const tokens = parsed as Partial<TokenResponse>;
+  if (!tokens.access_token || !tokens.refresh_token) {
+    throw new ApiError(502, "Refresh response missing tokens");
+  }
+
+  return tokens as TokenResponse;
 }
 
 export async function searchIdioms(
