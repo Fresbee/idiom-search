@@ -2,6 +2,15 @@ import type { paths } from "./api-types";
 
 const API_URL = process.env.API_URL!;
 
+export class ApiError extends Error {
+  status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
+
 // ---- Type aliases ----
 
 type LoginRequest =
@@ -30,7 +39,24 @@ export async function login(
   });
 
   if (!res.ok) {
-    throw new Error("Login failed");
+    throw new ApiError(res.status, "Login failed");
+  }
+
+  return res.json();
+}
+
+export async function refreshTokens(
+  refreshToken: string
+): Promise<TokenResponse> {
+  const res = await fetch(`${API_URL}/auth/refresh`, {
+    method: "POST",
+    headers: {
+      Cookie: `refresh_token=${encodeURIComponent(refreshToken)}`,
+    },
+  });
+
+  if (!res.ok) {
+    throw new ApiError(res.status, "Refresh failed");
   }
 
   return res.json();
@@ -42,7 +68,6 @@ export async function searchIdioms(
   limit = 10
 ): Promise<SearchResponse> {
   const url = `${API_URL}/idioms/search/${encodeURIComponent(phrase)}?limit=${limit}`;
-  console.log("API request: ", url);
 
   const res = await fetch(
     url,
@@ -54,10 +79,12 @@ export async function searchIdioms(
     }
   );
 
-  console.log("API response: ", res.status)
+  if (res.status === 404) {
+    return [];
+  }
 
   if (!res.ok) {
-    throw new Error(`Search failed: ${res.status}`);
+    throw new ApiError(res.status, `Search failed: ${res.status}`);
   }
 
   return res.json();
@@ -74,7 +101,7 @@ export async function getRandomIdiom(
   });
 
   if (!res.ok) {
-    throw new Error(`Random failed: ${res.status}`);
+    throw new ApiError(res.status, `Random failed: ${res.status}`);
   }
 
   return res.json();

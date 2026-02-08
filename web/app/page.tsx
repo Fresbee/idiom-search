@@ -1,8 +1,9 @@
-import { searchIdioms } from "@/lib/api";
+import { ApiError, searchIdioms } from "@/lib/api";
 import { IdiomList } from "@/components/IdiomList";
 import { SearchBar } from "@/components/SearchBar";
+import { AppHeader } from "@/components/AppHeader";
 import { Idiom } from "@/lib/types";
-import { getAccessToken } from "@/lib/auth";
+import { getOrRefreshAccessToken, refreshAccessToken } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { logout } from "@/lib/auth";
 
@@ -12,19 +13,40 @@ type HomeProps = {
 
 export default async function Home({ searchParams }: HomeProps) {
   // Check if the user has an authenticated session
-  const token = await getAccessToken();
+  let token = await getOrRefreshAccessToken();
   if (!token) {
     redirect("/login");
   }
 
   const params = await searchParams;
   const query = typeof params?.q === "string" ? params.q : undefined;
+  const rawLimit = typeof params?.limit === "string" ? Number(params.limit) : undefined;
+  const limit = rawLimit === 5 || rawLimit === 10 || rawLimit === 20 ? rawLimit : 10;
 
   let results: Idiom[] = [];
 
   console.log(`query = ${query}, token = ${token}`);
   if (query && token) {
-    results = await searchIdioms(query, token);
+    try {
+      results = await searchIdioms(query, token, limit);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        const refreshedToken = await refreshAccessToken();
+        if (!refreshedToken) {
+          redirect("/login");
+        }
+        token = refreshedToken;
+        try {
+          results = await searchIdioms(query, token, limit);
+        } catch (retryError) {
+          console.error("Idiom search failed after refresh:", retryError);
+          results = [];
+        }
+      } else {
+        console.error("Idiom search failed:", error);
+        results = [];
+      }
+    }
   } else {
     if (!query) {
       console.warn("Idiom search skipped: missing query.");
@@ -36,8 +58,8 @@ export default async function Home({ searchParams }: HomeProps) {
   return (
     <main className="p-10 relative">
       <LogoutButton />
-      <h1 className="text-3xl font-bold mb-4">Idiom Search</h1>
-      <SearchBar initialQuery={query} />
+      <AppHeader />
+      <SearchBar initialQuery={query} initialLimit={limit} />
       <IdiomList idioms={results} hasSearched={Boolean(query)} />
     </main>
   );

@@ -40,7 +40,7 @@ graph TD
   updater -->|Upsert idiom data| database
 ```
 
-### Website Interface to API (coming soon)
+### Website Interface
 
 A logical future use case would be to connect a web application GUI to this API. Such a web application would live in a separate Docker container from the API. A user would need to authenticate to ensure they can access the needed features. After this, they can make search requests using the Idioms API.
 
