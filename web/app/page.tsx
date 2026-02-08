@@ -45,7 +45,11 @@ export default async function Home({ searchParams }: HomeProps) {
       <LogoutButton />
       <AppHeader />
       <SearchBar initialQuery={query} initialLimit={limit} />
-      <IdiomList idioms={results} hasSearched={Boolean(query)} />
+      <IdiomList
+        idioms={results}
+        hasSearched={Boolean(query)}
+        query={query}
+      />
     </main>
   );
 }
