@@ -1,4 +1,4 @@
-import { ApiError, getRandomIdiom, searchIdioms } from "@/lib/api";
+import { ApiError, getRandomIdiom, searchBySynonym, searchIdioms } from "@/lib/api";
 import { IdiomList } from "@/components/IdiomList";
 import { SearchBar } from "@/components/SearchBar";
 import { AppHeader } from "@/components/AppHeader";
@@ -17,42 +17,54 @@ export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const query = typeof params?.q === "string" ? params.q : undefined;
   const rawLimit = typeof params?.limit === "string" ? Number(params.limit) : undefined;
-  const limit = rawLimit === 5 || rawLimit === 10 || rawLimit === 20 ? rawLimit : 10;
+  const limit = rawLimit && [5, 10, 20].includes(rawLimit) ? rawLimit : 10;
   const randomParam = typeof params?.random === "string" ? params.random : undefined;
   const isRandom = randomParam === "1" || randomParam === "true";
 
   let results: Idiom[] = [];
 
-  if (isRandom && token) {
-    try {
-      const idiom = await getRandomIdiom(token);
-      results = [idiom];
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        results = [];
-      } else {
-        console.error("Random idiom fetch failed:", error);
-        results = [];
+  if(token) {
+    if (isRandom) {
+      try {
+        const idiom = await getRandomIdiom(token);
+        results = [idiom];
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          results = [];
+        } else {
+          console.error("Random idiom fetch failed:", error);
+          results = [];
+        }
       }
-    }
-  } else if (query && token) {
-    try {
-      results = await searchIdioms(query, token, limit);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        results = [];
-      } else {
-        console.error("Idiom search failed:", error);
-        results = [];
+    } else if (query && query.startsWith('syn:')) {
+      try {
+        const synonymQuery: string = query.replace(/^syn:/, "");
+        results = await searchBySynonym(synonymQuery, token, limit);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          results = [];
+        } else {
+          console.error("Idiom search by synonym failed:", error);
+          results = [];
+        }
+      }
+  } else if (query) {
+      try {
+        results = await searchIdioms(query, token, limit);
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 401) {
+          results = [];
+        } else {
+          console.error("Idiom search failed:", error);
+          results = [];
+        }
       }
     }
   } else {
-    if (isRandom) {
-      console.warn("Random idiom fetch skipped: missing access_token cookie.");
+    if (!token) {
+      console.warn("Idiom search action skipped: missing access_token cookie.");
     } else if (!query) {
       console.warn("Idiom search skipped: missing query.");
-    } else if (!token) {
-      console.warn("Idiom search skipped: missing access_token cookie.");
     }
   }
 

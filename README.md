@@ -42,7 +42,7 @@ graph TD
 
 ### Website Interface
 
-A logical future use case would be to connect a web application GUI to this API. Such a web application would live in a separate Docker container from the API. A user would need to authenticate to ensure they can access the needed features. After this, they can make search requests using the Idioms API.
+A web application GUI can be connected to this API. This application lives in a separate Docker container from the API. A user needs to authenticate to ensure they can access the needed features. After this, they can make search requests using the Idioms API.
 
 ```mermaid
 graph TD
@@ -127,7 +127,6 @@ FastAPI provides Swagger and Redoc out of the box. This provides automatically g
 
 There is more work planned for this project. Here are some ideas for where to steer future development.
 
-* Build a front-end web interface to access idiom data (separate container)
 * Add endpoints for to analyze text for idiom recommendations
 
 ## Authentication Flow

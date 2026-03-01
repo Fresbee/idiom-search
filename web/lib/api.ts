@@ -108,6 +108,34 @@ export async function searchIdioms(
   return res.json();
 }
 
+export async function searchBySynonym(
+  synonym: string,
+  token: string,
+  limit = 10
+): Promise<SearchResponse> {
+  const url = `${API_URL}/idioms/by-synonym/${encodeURIComponent(synonym)}?limit=${limit}`;
+
+  const res = await fetch(
+    url,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  if (res.status === 404) {
+    return [];
+  }
+
+  if (!res.ok) {
+    throw new ApiError(res.status, `Search failed: ${res.status}`);
+  }
+
+  return res.json();
+}
+
 export async function getRandomIdiom(
   token: string
 ): Promise<RandomResponse> {
